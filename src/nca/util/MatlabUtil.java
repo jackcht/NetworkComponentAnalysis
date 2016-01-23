@@ -11,72 +11,72 @@ import com.mathworks.toolbox.javabuilder.MWClassID;
 import com.mathworks.toolbox.javabuilder.MWNumericArray;
 
 public class MatlabUtil {
-	
+
 	private double[][] _tfa;
-	
+
 	private double[][] _modifiedConnection;
-	
+
 	private String _tfaResultFile;
 	private String _connResultFile;
-	
-	
+
+
 	public MatlabUtil(){
-		
+
 	}
 	public MatlabUtil(String tfaResultFileName, String connResultFileName){
 		_tfaResultFile = tfaResultFileName;
 		_connResultFile = connResultFileName;
-		
+
 	}
-	
+
 	public double[][] getTfa (){
 		return _tfa;
 	}
-	
+
 	private void setTfa( double[][] tfa){
 		_tfa = tfa;
 	}
-	
+
 	public String getTfaResultFile(){
 		return _tfaResultFile;
 	}
-	
+
 	public String getConnResultFile(){
 		return _connResultFile;
 	}
-	
+
 	public double[][] getModifiedConnection(){
 		return _modifiedConnection;
 	}
-	
+
 	private void setModifiedConnection(double[][] matrix){
 		_modifiedConnection = matrix;
 	}
-	
+
 	private double[][] addToTfa(double[][] tfa, double[][] newTfa){
 		double[][] addedTfa = new double[tfa.length][tfa[0].length];
-		
+
 		for (int i = 0; i < tfa.length ; i++){
 			for (int j = 0; j < tfa[0].length ; j++){
 				addedTfa[i][j] = tfa[i][j] + newTfa[i][j];
 			}
 		}
-		
+
 		return addedTfa;
 	}
-	
+
 	private double[][] addToConnection(double[][] matrix, double[][] newMatrix){
 		double[][] addedConnection = new double[matrix.length][matrix[0].length];
-		
+
 		for (int i = 0; i < matrix.length ; i++){
 			for (int j = 0; j < matrix[0].length ; j++){
 				addedConnection[i][j] = matrix[i][j] + newMatrix[i][j];
 			}
 		}
-		
+
 		return addedConnection;
 	}
-	
+
 	private double[][] getFinalMeanTfa (double[][] tfa, int n){
 		double[][] finalMeanTfa = new double[tfa.length][tfa[0].length];
 		for (int i = 0; i < tfa.length ; i++){
@@ -86,7 +86,7 @@ public class MatlabUtil {
 		}
 		return finalMeanTfa;
 	}
-	
+
 	private double[][] getFinalMeanConnection (double[][] connection, int n){
 		double[][] finalMeanConnection = new double[connection.length][connection[0].length];
 		for (int i = 0; i < connection.length ; i++){
@@ -96,65 +96,30 @@ public class MatlabUtil {
 		}
 		return finalMeanConnection;
 	}
-	
-	
+
+
 	public void randomize(Randomization random, Data data){
 		double[][] finalConnectionMatrix = random.normalize();
-		
-		/*
-		System.out.println("\nFinal connection matrix: ");
-		System.out.println("Row: " + finalConnectionMatrix.length + " Col: "+finalConnectionMatrix[0].length);
-		
-		for (int i = 0; i < finalConnectionMatrix.length; i++){
-			for (int j = 0; j < finalConnectionMatrix[0].length; j++){
-				System.out.print(finalConnectionMatrix[i][j]+"\t");
-			}
-			System.out.println();
-		}
-		*/
-		
-		
+
 		MWNumericArray geneData = null;
 		MWNumericArray connection = null;
-		
+
 		Object[] result = null;
 		Class1 robnca = null;
-		
+
 		try{
 			geneData = new MWNumericArray(data.getGeneData(), MWClassID.DOUBLE);
-			//System.out.println("Array gene = \n" + geneData);
-			
+
 			connection = new MWNumericArray(finalConnectionMatrix, MWClassID.DOUBLE);
-			//System.out.println("Array connection = \n" + connection);
-			
+
 		    robnca = new Class1();
-		    
+
 		    result = robnca.ROBNCA(2, geneData,connection);
-		    //System.out.println(result[0]);
-		    //System.out.println("-------");
-		    //System.out.println(result[1]);
-		    
+
 		    setTfa( (double[][]) ((MWNumericArray)result[1]).toDoubleArray() );
-		    /*
-		    for (int i = 0; i < tfa.length; i++){
-		    	for (int j = 0; j<tfa[0].length; j++){
-		    		System.out.print(tfa[i][j] + "\t");
-		    	}
-		    	System.out.println();
-		    }
-		    */
-		    
+
 		    setModifiedConnection ( (double[][]) ((MWNumericArray)result[0]).toDoubleArray() );
-		    /*
-		    for (int i = 0; i < modifiedConnection.length; i++){
-		    	for (int j = 0; j < modifiedConnection[0].length; j++){
-		    		System.out.print(modifiedConnection[i][j]+"\t");
-		    	}
-		    	System.out.println();
-		    }
-		    */
-		    
-				
+
 		}
 		catch (Exception e){
 			e.getMessage();
@@ -167,47 +132,34 @@ public class MatlabUtil {
 			robnca.dispose();
 		}
 	}
-	
-	
-	
+
+
+
 	public void randomize(Randomization random, Data data, int n){
-		
-		double[][] cumulativeTfa = null; 
+
+		double[][] cumulativeTfa = null;
 		double[][] cumulativeConnection  = null;
-		
-		int tempCount = n; 
-		
+
+		int tempCount = n;
+
 		for (int i = 0; i < tempCount; i++){
 			System.out.println(i + "\n");
 			double[][] finalConnectionMatrix = random.normalize();
-			
-			// Print the normalized influence strength matrix, all scaled to +/- [0,1]
-			/*
-			System.out.println("Final connection matrix: ");
-			System.out.println("Row: " + finalConnectionMatrix.length + " Col: "+finalConnectionMatrix[0].length);
-			
-			for (int k = 0; k < finalConnectionMatrix.length; k++){
-				for (int j = 0; j < finalConnectionMatrix[0].length; j++){
-					System.out.print(finalConnectionMatrix[k][j]+"\t");
-				}
-				System.out.println();
-			}
-			*/
-			
+
 			/** iterative calculation of TFA [S] and Influence strength matrix [A] until the diff between A[n-1] & A[n] < 5%*/
 			NcaResult ncaResult = calculateNCAResult(data.getGeneData(), finalConnectionMatrix);
-			
+
 			if (ncaResult.getTfa() == null || ncaResult.getConn() == null){
 				tempCount ++;
 				continue;
 			}
-				
-			
+
+
 			double[][] resultTfa = ncaResult.getTfa();
 			double[][] resultConnection = ncaResult.getConn();
-			
-		    
-		    String tfaResultPrint = "Result["+ i +"]\r\n"; 
+
+
+		    String tfaResultPrint = "Result["+ i +"]\r\n";
 		    for (int k = 0; k < resultTfa.length; k++){
 		    	for (int j = 0; j<resultTfa[0].length; j++){
 		    		tfaResultPrint += resultTfa[k][j] + "\t";
@@ -215,8 +167,8 @@ public class MatlabUtil {
 		    	tfaResultPrint += "\r\n";
 		    }
 		    textOutput(this.getTfaResultFile(),tfaResultPrint);
-		    
-		    
+
+
 		    String connResultPrint = "Result["+ i +"]\r\n";
 		    for (int k = 0; k < resultConnection.length; k++){
 		    	for (int j = 0; j < resultConnection[0].length; j++){
@@ -225,12 +177,12 @@ public class MatlabUtil {
 		    	connResultPrint += "\r\n";
 		    }
 		    textOutput(this.getConnResultFile(),connResultPrint);
-		    	
-		    
+
+
 		    if (i == 0){
 		    	cumulativeTfa = resultTfa;
 		    	cumulativeConnection = resultConnection;
-		    	
+
 		    }
 		    else{
 		    	if (cumulativeTfa == null && cumulativeConnection == null){
@@ -242,54 +194,36 @@ public class MatlabUtil {
 		    		cumulativeConnection = addToConnection(cumulativeConnection, resultConnection);
 		    	}
 		    }
-			    	
-			
-			/*
-			System.out.println(" current cumulative tfa");
-		    for (int m = 0; m < cumulativeTfa.length; m++){
-		    	for (int j = 0; j<cumulativeTfa[0].length; j++){
-		    		System.out.print(cumulativeTfa[m][j] + "\t");
-		    	}
-		    	System.out.println();
-		    }
-		    System.out.println(" current cumulative connection");
-		    for (int m = 0; m < cumulativeConnection.length; m++){
-		    	for (int j = 0; j < cumulativeConnection[0].length; j++){
-		    		System.out.print(cumulativeConnection[m][j]+"\t");
-		    	}
-		    	System.out.println();
-		    }
-		    */
 		}
-		
+
 		setTfa(getFinalMeanTfa(cumulativeTfa, n)) ;
 		setModifiedConnection(getFinalMeanConnection(cumulativeConnection,n));
-		
+
 	}
-	
-	
+
+
 	private NcaResult calculateNCAResult(double[][] rawGeneData, double[][] connectionMatrix){
-		
+
 		MWNumericArray geneData = null;
 		MWNumericArray connection = null;
-		
+
 		Object[] result = null;
 		Class1 robnca = null;
-		
+
 		NcaResult ncaResult = null;
-		
+
 		try{
 			geneData = new MWNumericArray(rawGeneData, MWClassID.DOUBLE);
 			connection = new MWNumericArray(connectionMatrix, MWClassID.DOUBLE);
-			
+
 		    robnca = new Class1();
 		    result = robnca.ROBNCA(2, geneData,connection);
-		    
+
 		    double[][] resultTfa = (double[][]) ((MWNumericArray)result[1]).toDoubleArray();
 		    double[][] resultConnection = (double[][]) ((MWNumericArray)result[0]).toDoubleArray();
-		    
+
 		    boolean hasNaN = checkNaN(resultConnection);
-		    
+
 		    if (hasNaN){
 		    	//System.out.println("In calculateNCAResult: it has NaN");
 		    	return new NcaResult(null,null);
@@ -299,7 +233,7 @@ public class MatlabUtil {
 			    result = robnca.ROBNCA(2, geneData,connection);
 			    resultTfa = (double[][]) ((MWNumericArray)result[1]).toDoubleArray();
 			    double[][] newResultConnection = (double[][]) ((MWNumericArray)result[0]).toDoubleArray();
-			    
+
 			    int count = 0;
 		    	while (!checkThreshold(resultConnection, newResultConnection)){
 		    		count ++;
@@ -308,19 +242,19 @@ public class MatlabUtil {
 				    result = robnca.ROBNCA(2, geneData,connection);
 				    resultTfa = (double[][]) ((MWNumericArray)result[1]).toDoubleArray();
 				    newResultConnection = (double[][]) ((MWNumericArray)result[0]).toDoubleArray();
-				    
+
 				    hasNaN = checkNaN(newResultConnection);
-				    
+
 				    if (hasNaN){
 				    	//System.out.println("it has NaN");
 				    	return new NcaResult(null,null);
 				    }
 		    	}
 		    	System.out.println("iteration count: "+ count);
-		    	
+
 		    	ncaResult = new NcaResult(resultTfa,newResultConnection);
 		    }
-		    
+
 		}
 		catch(Exception e){
 			e.getMessage();
@@ -333,11 +267,11 @@ public class MatlabUtil {
 			robnca.dispose();
 		}
 		return ncaResult;
-		
+
 	}
-	
-	
-	
+
+
+
 	private boolean textOutput(String filename, String text) {
 		FileWriter output = null;
 	    try {
@@ -352,7 +286,7 @@ public class MatlabUtil {
 		}
 	    return false;
 	}
-	
+
 	private boolean checkNaN (double[][] matrix){
 		boolean hasNaN = false;
 		for(int k = 0; k < matrix.length ; k++){
@@ -366,10 +300,10 @@ public class MatlabUtil {
 	    		break;
 	    	}
 	    }
-		
+
 		return hasNaN;
 	}
-	
+
 	private boolean checkThreshold (double[][] oldConn, double[][] newConn){
 		boolean withInThreshold =true;
 		for(int i = 0; i < oldConn.length ; i++){
@@ -383,12 +317,12 @@ public class MatlabUtil {
 	    		break;
 	    	}
 		}
-		
+
 		return withInThreshold;
 	}
-	
-	
-	
+
+
+
 	final class NcaResult {
 	    private final double[][] _tfa;
 	    private final double[][] _conn;
